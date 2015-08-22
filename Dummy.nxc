@@ -1,0 +1,17 @@
+#define COLORSENSOR SENSOR_3
+#define LOWSPEED 20
+#define HIGHSPEED 65
+
+task main() {
+  SetSensorColorFull(S3);
+  while(true) {
+    if(COLORSENSOR < 2) {
+      OnFwd(OUT_B, LOWSPEED);
+      OnFwd(OUT_C, HIGHSPEED);
+    }
+    else {
+      OnFwd(OUT_B, HIGHSPEED);
+      OnFwd(OUT_C, LOWSPEED);
+    }
+  }
+}
