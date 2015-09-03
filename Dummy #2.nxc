@@ -1,0 +1,38 @@
+#define COLORSENSOR SENSOR_3
+#define LOWSPEED 10
+#define HIGHSPEED 50
+
+int direction = 0; //0 = left, 1 = right
+
+void move(int dir) {
+  if(dir == 0) {
+    OnFwd(OUT_C, LOWSPEED);
+    OnFwd(OUT_B, HIGHSPEED);
+  }
+  else {
+    OnFwd(OUT_C, HIGHSPEED);
+    OnFwd(OUT_B, LOWSPEED);
+  }
+}
+
+
+task main() {
+  SetSensorColorFull(S3);
+  while(true) {
+    if(COLORSENSOR != 6) {
+      move(direction);
+    }
+    else {
+      if(direction == 0) {
+        direction = 1;
+        move(direction);
+        while(COLORSENSOR == 6);
+      }
+      else {
+        direction = 0;
+        move(direction);
+        while(COLORSENSOR == 6);
+      }
+    }
+  }
+}
