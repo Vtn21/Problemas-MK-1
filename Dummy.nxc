@@ -1,6 +1,6 @@
 #define COLORSENSOR SENSOR_3
-#define LOWSPEED 20
-#define HIGHSPEED 65
+#define LOWSPEED 30
+#define HIGHSPEED 50
 
 task main() {
   SetSensorColorFull(S3);
