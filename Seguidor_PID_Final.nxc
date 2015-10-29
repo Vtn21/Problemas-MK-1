@@ -1,0 +1,121 @@
+#define MAX 70
+#define MIN 0
+
+#define BASE_SPEED 60
+
+#define TARGET 50
+
+#define KP 1.5
+#define KI 4
+#define KD 2.5
+
+#define DELAY 10
+#define TOLERANCE 1000
+
+#define FLAG_TARGET 45
+#define FLAG_DELAY 2000
+
+int i = 0, lastErr = 0, mean = (MAX + MIN)/2;
+
+int PID() {
+     int p, d, pid, error;
+     SetSensorColorRed(IN_3);
+     error = Sensor(IN_3) - mean;
+     p = error * KP;
+     i += (error * KI) * (DELAY/1000);
+     d = (((error - lastErr) / DELAY) * KD) / (DELAY/1000);
+     lastErr = error;
+     pid = p + i + d;
+     return pid;
+}
+
+task main() {
+     int pid, speed;
+     unsigned long time = - TOLERANCE;
+     bool count = true;
+     SetSensorLight(IN_4);
+     SetSensorLight(IN_1);
+     while(true) {
+          if(Sensor(IN_4) < TARGET) { //Dummy detected
+               Off(OUT_BC);
+               time = CurrentTick();
+          }
+          else {
+               if(Sensor(IN_1) > FLAG_TARGET) { //Flag detected
+                    if(count) { //Bigger loop
+                         if(CurrentTick() < time + TOLERANCE) { //Dummy detected
+                              Off(OUT_B);
+                              OnFwd(OUT_C, 20);
+                              Wait(1000);
+                              Off(OUT_BC);
+                              Wait(1000);
+                              time = CurrentTick();
+                              while(CurrentTick() < time + FLAG_DELAY) {
+                                   if(Sensor(IN_4) < TARGET) {
+                                        Off(OUT_BC);
+                                   }
+                                   else {
+                                        pid = PID();
+                                        OnFwd(OUT_B, BASE_SPEED + pid);
+                                        OnFwd(OUT_C, BASE_SPEED - pid);
+                                        Wait(DELAY);
+                                   }
+                              }
+                              while(Sensor(IN_1) < FLAG_TARGET) { //Follow inside to trespass the dummy
+                                   pid = PID();
+                                   OnFwd(OUT_B, BASE_SPEED + pid);
+                                   OnFwd(OUT_C, BASE_SPEED - pid);
+                                   Wait(DELAY);
+                              }
+                              time = CurrentTick();
+                              while(CurrentTick() < time + FLAG_DELAY/2) {
+                                        pid = PID();
+                                        OnFwd(OUT_B, BASE_SPEED + pid);
+                                        OnFwd(OUT_C, BASE_SPEED - pid);
+                                        Wait(DELAY);
+                              }
+                              Off(OUT_C);
+                              OnFwd(OUT_B, 20);
+                              Wait(200);
+                         }
+                         else { //Dummy not detected
+                              time = CurrentTick();
+                              while(CurrentTick() < time + FLAG_DELAY) {
+                                   if(Sensor(IN_4) < TARGET) {
+                                        Off(OUT_BC);
+                                   }
+                                   else {
+                                        pid = PID();
+                                        OnFwd(OUT_B, BASE_SPEED - pid);
+                                        OnFwd(OUT_C, BASE_SPEED + pid);
+                                        Wait(DELAY);
+                                   }
+                              }
+                              count = false;
+                         }
+                    }
+                    else { //Smaller loop
+                         time = CurrentTick();
+                         while(CurrentTick() < time + FLAG_DELAY) {
+                              if(Sensor(IN_4) < TARGET) {
+                                   Off(OUT_BC);
+                              }
+                              else {
+                                   pid = PID();
+                                   OnFwd(OUT_B, BASE_SPEED - pid);
+                                   OnFwd(OUT_C, BASE_SPEED + pid);
+                                   Wait(DELAY);
+                              }
+                         }
+                         count = true;
+                    }
+               }
+               else { //Flag not detected
+                    pid = PID();
+                    OnFwd(OUT_B, BASE_SPEED - pid);
+                    OnFwd(OUT_C, BASE_SPEED + pid);
+                    Wait(DELAY);
+               }
+          }
+     }
+}
