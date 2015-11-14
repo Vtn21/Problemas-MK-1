@@ -1,3 +1,14 @@
+import Adafruit_BBIO.ADC as ADC
+import Adafruit_BBIO.PWM as PWM
+import time
+
+SENSOR_L = "P9_37"
+SENSOR_R = "P9_38"
+MOTOR_L = "P9_14"
+MOTOR_R = "P8_13"
+SENSOR_FRONT = "P9_39"
+SENSOR_FLAG = "P9_40"
+
 HIGH_L = 9.8
 LOW_L = 7.6
 HIGH_R = 1.2
